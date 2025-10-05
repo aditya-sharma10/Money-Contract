@@ -1,0 +1,71 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import {Test} from "forge-std/Test.sol";
+import {Money} from "../src/Money.sol";
+
+contract MoneyTest is Test {
+    Money public money;
+     receive() external payable {}
+    // Called before each test
+    function setUp() public {
+        // Deploy Money contract; test contract becomes the owner
+        money = new Money();
+    }
+
+    // Test if initial owner is set correctly
+    function testInitialOwner() public view {
+        assertEq(money.owner(), address(this));
+    }
+
+    // Test partial withdrawal
+    function testWithdraw() public {
+        // Fund the contract with 1 ether
+        vm.deal(address(money), 1 ether);
+
+        // Record initial balance of test contract
+        uint256 initialBalance = address(this).balance;
+
+        // Withdraw 0.5 ether
+        money.withdraw(0.5 ether);
+
+        // Assert that balance increased by 0.5 ether
+        assertEq(address(this).balance, initialBalance + 0.5 ether);
+    }
+
+    // Test full withdrawal
+    function testWithdrawAll() public {
+        // Fund the contract with 1 ether
+        vm.deal(address(money), 1 ether);
+
+        uint256 initialBalance = address(this).balance;
+
+        // Withdraw all Ether
+        money.withdrawAll();
+
+        // Assert that balance increased by 1 ether
+        assertEq(address(this).balance, initialBalance + 1 ether);
+    }
+
+    // Test receiving Ether via receive()
+    function testReceiveEther() public {
+        // Send 1 ether to contract
+        (bool success, ) = address(money).call{value: 1 ether}("");
+        require(success, "Ether transfer failed");
+
+        // Assert contract balance is 1 ether
+        assertEq(address(money).balance, 1 ether);
+    }
+   
+
+    // Test changing owner
+    function testSetOwner() public {
+        address newOwner = address(0x123);
+
+        // Change owner
+        money.setOwner(newOwner);
+
+        // Assert new owner
+        assertEq(money.owner(), newOwner);
+    }
+}
