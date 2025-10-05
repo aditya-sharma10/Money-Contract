@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+contract Money {
+ 
+    address payable public owner;
+
+
+    constructor() {
+        owner = payable(msg.sender);
+    }
+
+    
+    function withdraw(uint256 _amount) external {
+        require(msg.sender == owner, "Only owner can withdraw");
+        (bool success, ) = owner.call{value: _amount}("");
+        require(success, "Transfer failed");
+    }
+
+    function withdrawAll() external {
+        require(msg.sender == owner, "Only owner can withdraw");
+        (bool success, ) = owner.call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+    }
+
+
+    receive() external payable {}
+
+ 
+ 
+    function setOwner(address newOwner) external {
+        require(msg.sender == owner, "Only owner can set new owner");
+        require(newOwner != address(0), "New owner cannot be zero address");
+        owner = payable(newOwner);
+    }
+}
